@@ -2,12 +2,11 @@ from esphome import automation, pins
 from esphome.automation import maybe_simple_id
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import spi, nfc
+from esphome.components import nfc
 from esphome.const import CONF_ID, CONF_ON_TAG_REMOVED, CONF_ON_TAG, CONF_TRIGGER_ID
 
-AUTO_LOAD = ["nfc"]
+AUTO_LOAD = ["binary_sensor", "nfc"]
 CODEOWNERS = ["@kbx81", "@jesserockz"]
-DEPENDENCIES = ["spi"]
 
 CONF_DWL_REQ_PIN = "dwl_req_pin"
 CONF_EMULATION_MESSAGE = "emulation_message"
@@ -30,7 +29,7 @@ CONF_VEN_PIN = "ven_pin"
 CONF_WKUP_REQ_PIN = "wkup_req_pin"
 
 pn7160_ns = cg.esphome_ns.namespace("pn7160")
-PN7160 = pn7160_ns.class_("PN7160", cg.Component, spi.SPIDevice)
+PN7160 = pn7160_ns.class_("PN7160", cg.Component)
 
 EmulationOffAction = pn7160_ns.class_("EmulationOffAction", automation.Action)
 EmulationOnAction = pn7160_ns.class_("EmulationOnAction", automation.Action)
@@ -74,45 +73,41 @@ SET_MESSAGE_ACTION_SCHEMA = cv.Schema(
     }
 )
 
-CONFIG_SCHEMA = (
-    cv.Schema(
-        {
-            cv.GenerateID(): cv.declare_id(PN7160),
-            cv.Optional(CONF_ON_EMULATED_TAG_SCAN): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
-                        PN7160OnEmulatedTagScanTrigger
-                    ),
-                }
-            ),
-            cv.Optional(CONF_ON_FINISHED_WRITE): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
-                        PN7160OnFinishedWriteTrigger
-                    ),
-                }
-            ),
-            cv.Optional(CONF_ON_TAG): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(nfc.NfcOnTagTrigger),
-                }
-            ),
-            cv.Optional(CONF_ON_TAG_REMOVED): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(nfc.NfcOnTagTrigger),
-                }
-            ),
-            cv.Required(CONF_DWL_REQ_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_IRQ_PIN): pins.gpio_input_pin_schema,
-            cv.Required(CONF_VEN_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_WKUP_REQ_PIN): pins.gpio_output_pin_schema,
-            cv.Optional(CONF_EMULATION_MESSAGE): cv.string,
-            cv.Optional(CONF_TAG_TTL): cv.positive_time_period_milliseconds,
-        }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
-    .extend(spi.spi_device_schema(cs_pin_required=True))
-)
+PN7160_SCHEMA = cv.Schema(
+    {
+        cv.GenerateID(): cv.declare_id(PN7160),
+        cv.Optional(CONF_ON_EMULATED_TAG_SCAN): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                    PN7160OnEmulatedTagScanTrigger
+                ),
+            }
+        ),
+        cv.Optional(CONF_ON_FINISHED_WRITE): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                    PN7160OnFinishedWriteTrigger
+                ),
+            }
+        ),
+        cv.Optional(CONF_ON_TAG): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(nfc.NfcOnTagTrigger),
+            }
+        ),
+        cv.Optional(CONF_ON_TAG_REMOVED): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(nfc.NfcOnTagTrigger),
+            }
+        ),
+        cv.Required(CONF_DWL_REQ_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_IRQ_PIN): pins.gpio_input_pin_schema,
+        cv.Required(CONF_VEN_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_WKUP_REQ_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_EMULATION_MESSAGE): cv.string,
+        cv.Optional(CONF_TAG_TTL): cv.positive_time_period_milliseconds,
+    }
+).extend(cv.COMPONENT_SCHEMA)
 
 
 @automation.register_action(
@@ -170,10 +165,8 @@ async def pn7160_simple_action_to_code(config, action_id, template_arg, args):
     return cg.new_Pvariable(action_id, template_arg, paren)
 
 
-async def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
+async def setup_pn7160(var, config):
     await cg.register_component(var, config)
-    await spi.register_spi_device(var, config)
 
     pin = await cg.gpio_pin_expression(config[CONF_DWL_REQ_PIN])
     cg.add(var.set_dwl_req_pin(pin))

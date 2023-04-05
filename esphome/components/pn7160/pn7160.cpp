@@ -15,7 +15,6 @@ void PN7160::setup() {
   this->irq_pin_->setup();
   this->ven_pin_->setup();
   this->wkup_req_pin_->setup();
-  this->spi_setup();
 
   for (auto *bs : this->binary_sensors_) {
     bs->publish_initial_state(false);
@@ -26,7 +25,6 @@ void PN7160::setup() {
 
 void PN7160::dump_config() {
   ESP_LOGCONFIG(TAG, "PN7160:");
-  LOG_PIN("  CS Pin: ", this->cs_);
 
   for (auto *child : this->binary_sensors_) {
     LOG_BINARY_SENSOR("  ", "Tag", child);
@@ -744,9 +742,6 @@ void PN7160::process_rf_intf_activated_oid_(nfc::NciMessage &rx) {  // an endpoi
   uint8_t protocol = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_PROTOCOL);
   uint8_t mode_tech = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_MODE_TECH);
   uint8_t max_size = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_MAX_SIZE);
-  // uint8_t initial_cred = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_INIT_CRED);
-  // uint8_t rf_tech_params_len = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_RF_TECH_LENGTH);
-  // uint8_t rf_tech_params = rx.get_message_byte(nfc::RF_INTF_ACTIVATED_NTF_RF_TECH_PARAMS);
 
   ESP_LOGVV(TAG, "Endpoint activated -- interface: 0x%02X, protocol: 0x%02X, mode&tech: 0x%02X, max payload: %u",
             interface, protocol, mode_tech, max_size);
@@ -1082,38 +1077,6 @@ uint8_t PN7160::transceive_(nfc::NciMessage &tx, nfc::NciMessage &rx, const uint
 
     return nfc::STATUS_OK;
   }
-}
-
-uint8_t PN7160::read_nfcc_(nfc::NciMessage &rx, const uint16_t timeout) {
-  if (this->wait_for_irq_(timeout) != nfc::STATUS_OK) {
-    return nfc::STATUS_FAILED;
-  }
-
-  rx.get_message().resize(nfc::NCI_PKT_HEADER_SIZE);
-  this->enable();
-  this->write_byte(TDD_SPI_READ);  // send "transfer direction detector"
-  this->read_array(rx.get_message().data(), nfc::NCI_PKT_HEADER_SIZE);
-
-  uint8_t length = rx.get_payload_size();
-  if (length > 0) {
-    rx.get_message().resize(length + nfc::NCI_PKT_HEADER_SIZE);
-    this->read_array(rx.get_message().data() + nfc::NCI_PKT_HEADER_SIZE, length);
-  }
-  this->disable();
-  // semaphore to ensure transaction is complete before returning
-  if (this->wait_for_irq_(NFCC_DEFAULT_TIMEOUT, false) != nfc::STATUS_OK) {
-    ESP_LOGW(TAG, "  post-read");
-    return nfc::STATUS_FAILED;
-  }
-  return nfc::STATUS_OK;
-}
-
-uint8_t PN7160::write_nfcc_(nfc::NciMessage &tx) {
-  this->enable();
-  this->write_byte(TDD_SPI_WRITE);  // send "transfer direction detector"
-  this->write_array(tx.encode().data(), tx.encode().size());
-  this->disable();
-  return nfc::STATUS_OK;
 }
 
 uint8_t PN7160::wait_for_irq_(uint16_t timeout, bool pin_state) {

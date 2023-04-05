@@ -26,9 +26,6 @@ static const uint16_t NFCC_TAG_WRITE_TIMEOUT = 15;
 static const uint8_t NFCC_MAX_COMM_FAILS = 3;
 static const uint8_t NFCC_MAX_ERROR_COUNT = 10;
 
-static const uint8_t TDD_SPI_READ = 0xFF;
-static const uint8_t TDD_SPI_WRITE = 0x0A;
-
 static const uint8_t XCHG_DATA_OID = 0x10;
 static const uint8_t MF_SECTORSEL_OID = 0x32;
 static const uint8_t MFC_AUTHENTICATE_OID = 0x40;
@@ -166,9 +163,7 @@ class PN7160BinarySensor : public binary_sensor::BinarySensor {
   std::string match_string_;
 };
 
-class PN7160 : public Component,
-               public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING,
-                                     spi::DATA_RATE_4MHZ> {
+class PN7160 : public Component {
  public:
   void setup() override;
   void dump_config() override;
@@ -259,8 +254,8 @@ class PN7160 : public Component,
 
   uint8_t transceive_(nfc::NciMessage &tx, nfc::NciMessage &rx, const uint16_t timeout = NFCC_DEFAULT_TIMEOUT,
                       const bool expect_notification = true);
-  uint8_t read_nfcc_(nfc::NciMessage &rx, const uint16_t timeout = NFCC_DEFAULT_TIMEOUT);
-  uint8_t write_nfcc_(nfc::NciMessage &tx);
+  virtual uint8_t read_nfcc_(nfc::NciMessage &rx, const uint16_t timeout = NFCC_DEFAULT_TIMEOUT) = 0;
+  virtual uint8_t write_nfcc_(nfc::NciMessage &tx) = 0;
 
   uint8_t wait_for_irq_(uint16_t timeout = NFCC_DEFAULT_TIMEOUT, bool pin_state = true);
 
