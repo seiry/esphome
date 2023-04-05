@@ -528,7 +528,7 @@ void PN7160::erase_tag_(const uint8_t tag_index) {
     for (auto *bs : this->binary_sensors_) {
       bs->tag_off(this->discovered_endpoint_[tag_index].tag);
     }
-    ESP_LOGD(TAG, "Tag %s removed", nfc::format_bytes(this->discovered_endpoint_[tag_index].tag.get_uid()).c_str());
+    ESP_LOGD(TAG, "Tag %s removed", nfc::format_uid(this->discovered_endpoint_[tag_index].tag.get_uid()).c_str());
     this->discovered_endpoint_.erase(this->discovered_endpoint_.begin() + tag_index);
   }
 }
@@ -818,10 +818,10 @@ void PN7160::process_rf_intf_activated_oid_(nfc::NciMessage &rx) {  // an endpoi
           if (this->read_endpoint_data_(working_endpoint.tag) != nfc::STATUS_OK) {
             ESP_LOGW(TAG, "  Unable to read NDEF record(s)");
           } else if (working_endpoint.tag.has_ndef_message()) {
-            const auto &message = working_endpoint.tag.get_ndef_message();
-            const auto &records = message->get_records();
+            const auto message = working_endpoint.tag.get_ndef_message();
+            const auto records = message->get_records();
             ESP_LOGD(TAG, "  NDEF record(s):");
-            for (const auto &record : records) {
+            for (const auto record : records) {
               ESP_LOGD(TAG, "    %s - %s", record->get_type().c_str(), record->get_payload().c_str());
             }
           } else {

@@ -46,6 +46,26 @@ template<typename... Ts> class EmulationOnAction : public Action<Ts...> {
   PN7160 *pn7160_;
 };
 
+template<typename... Ts> class PollingOffAction : public Action<Ts...> {
+ public:
+  explicit PollingOffAction(PN7160 *a_pn7160) : pn7160_(a_pn7160) {}
+
+  void play(Ts... x) override { this->pn7160_->set_polling_off(); }
+
+ protected:
+  PN7160 *pn7160_;
+};
+
+template<typename... Ts> class PollingOnAction : public Action<Ts...> {
+ public:
+  explicit PollingOnAction(PN7160 *a_pn7160) : pn7160_(a_pn7160) {}
+
+  void play(Ts... x) override { this->pn7160_->set_polling_on(); }
+
+ protected:
+  PN7160 *pn7160_;
+};
+
 template<typename... Ts> class SetCleanModeAction : public Action<Ts...> {
  public:
   explicit SetCleanModeAction(PN7160 *a_pn7160) : pn7160_(a_pn7160) {}

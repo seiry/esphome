@@ -18,6 +18,8 @@ CONF_MESSAGE = "message"
 CONF_ON_FINISHED_WRITE = "on_finished_write"
 CONF_ON_EMULATED_TAG_SCAN = "on_emulated_tag_scan"
 CONF_PN7160_ID = "pn7160_id"
+CONF_POLLING_OFF = "polling_off"
+CONF_POLLING_ON = "polling_on"
 CONF_SET_CLEAN_MODE = "set_clean_mode"
 CONF_SET_EMULATION_MESSAGE = "set_emulation_message"
 CONF_SET_FORMAT_MODE = "set_format_mode"
@@ -33,6 +35,8 @@ PN7160 = pn7160_ns.class_("PN7160", cg.Component)
 
 EmulationOffAction = pn7160_ns.class_("EmulationOffAction", automation.Action)
 EmulationOnAction = pn7160_ns.class_("EmulationOnAction", automation.Action)
+PollingOffAction = pn7160_ns.class_("PollingOffAction", automation.Action)
+PollingOnAction = pn7160_ns.class_("PollingOnAction", automation.Action)
 SetCleanModeAction = pn7160_ns.class_("SetCleanModeAction", automation.Action)
 SetEmulationMessageAction = pn7160_ns.class_(
     "SetEmulationMessageAction", automation.Action
@@ -148,6 +152,8 @@ async def pn7160_set_write_message_to_code(config, action_id, template_arg, args
     "tag.emulation_off", EmulationOffAction, SIMPLE_ACTION_SCHEMA
 )
 @automation.register_action("tag.emulation_on", EmulationOnAction, SIMPLE_ACTION_SCHEMA)
+@automation.register_action("tag.polling_off", PollingOffAction, SIMPLE_ACTION_SCHEMA)
+@automation.register_action("tag.polling_on", PollingOnAction, SIMPLE_ACTION_SCHEMA)
 @automation.register_action(
     "tag.set_clean_mode", SetCleanModeAction, SIMPLE_ACTION_SCHEMA
 )
