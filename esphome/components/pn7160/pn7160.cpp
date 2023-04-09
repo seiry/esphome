@@ -11,10 +11,14 @@ namespace pn7160 {
 static const char *const TAG = "pn7160";
 
 void PN7160::setup() {
-  this->dwl_req_pin_->setup();
   this->irq_pin_->setup();
   this->ven_pin_->setup();
-  this->wkup_req_pin_->setup();
+  if (this->dwl_req_pin_ != nullptr) {
+    this->dwl_req_pin_->setup();
+  }
+  if (this->wkup_req_pin_ != nullptr) {
+    this->wkup_req_pin_->setup();
+  }
 
   for (auto *bs : this->binary_sensors_) {
     bs->publish_initial_state(false);
@@ -25,6 +29,14 @@ void PN7160::setup() {
 
 void PN7160::dump_config() {
   ESP_LOGCONFIG(TAG, "PN7160:");
+  if (this->dwl_req_pin_ != nullptr) {
+    LOG_PIN("  DWL_REQ pin: ", this->dwl_req_pin_);
+  }
+  LOG_PIN("  IRQ pin: ", this->irq_pin_);
+  LOG_PIN("  VEN pin: ", this->ven_pin_);
+  if (this->wkup_req_pin_ != nullptr) {
+    LOG_PIN("  WKUP_REQ pin: ", this->wkup_req_pin_);
+  }
 
   for (auto *child : this->binary_sensors_) {
     LOG_BINARY_SENSOR("  ", "Tag", child);
@@ -167,8 +179,10 @@ void PN7160::init_failure_handler_() {
 }
 
 uint8_t PN7160::reset_core_(const bool reset_config, const bool power) {
-  this->dwl_req_pin_->digital_write(false);
-  delay(NFCC_DEFAULT_TIMEOUT);
+  if (this->dwl_req_pin_ != nullptr) {
+    this->dwl_req_pin_->digital_write(false);
+    delay(NFCC_DEFAULT_TIMEOUT);
+  }
 
   if (power) {
     this->ven_pin_->digital_write(true);

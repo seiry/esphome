@@ -301,10 +301,10 @@ class PN7160 : public Component {
   uint8_t flash_major_version_{0};
   uint8_t flash_minor_version_{0};
 
-  GPIOPin *dwl_req_pin_;
-  GPIOPin *irq_pin_;
-  GPIOPin *ven_pin_;
-  GPIOPin *wkup_req_pin_;
+  GPIOPin *dwl_req_pin_{nullptr};
+  GPIOPin *irq_pin_{nullptr};
+  GPIOPin *ven_pin_{nullptr};
+  GPIOPin *wkup_req_pin_{nullptr};
 
   CallbackManager<void()> on_emulated_tag_scan_callback_;
   CallbackManager<void()> on_finished_write_callback_;

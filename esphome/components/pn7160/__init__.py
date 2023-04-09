@@ -104,10 +104,10 @@ PN7160_SCHEMA = cv.Schema(
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(nfc.NfcOnTagTrigger),
             }
         ),
-        cv.Required(CONF_DWL_REQ_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_DWL_REQ_PIN): pins.gpio_output_pin_schema,
         cv.Required(CONF_IRQ_PIN): pins.gpio_input_pin_schema,
         cv.Required(CONF_VEN_PIN): pins.gpio_output_pin_schema,
-        cv.Required(CONF_WKUP_REQ_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_WKUP_REQ_PIN): pins.gpio_output_pin_schema,
         cv.Optional(CONF_EMULATION_MESSAGE): cv.string,
         cv.Optional(CONF_TAG_TTL): cv.positive_time_period_milliseconds,
     }
@@ -174,8 +174,9 @@ async def pn7160_simple_action_to_code(config, action_id, template_arg, args):
 async def setup_pn7160(var, config):
     await cg.register_component(var, config)
 
-    pin = await cg.gpio_pin_expression(config[CONF_DWL_REQ_PIN])
-    cg.add(var.set_dwl_req_pin(pin))
+    if CONF_DWL_REQ_PIN in config:
+        pin = await cg.gpio_pin_expression(config[CONF_DWL_REQ_PIN])
+        cg.add(var.set_dwl_req_pin(pin))
 
     pin = await cg.gpio_pin_expression(config[CONF_IRQ_PIN])
     cg.add(var.set_irq_pin(pin))
@@ -183,8 +184,9 @@ async def setup_pn7160(var, config):
     pin = await cg.gpio_pin_expression(config[CONF_VEN_PIN])
     cg.add(var.set_ven_pin(pin))
 
-    pin = await cg.gpio_pin_expression(config[CONF_WKUP_REQ_PIN])
-    cg.add(var.set_wkup_req_pin(pin))
+    if CONF_WKUP_REQ_PIN in config:
+        pin = await cg.gpio_pin_expression(config[CONF_WKUP_REQ_PIN])
+        cg.add(var.set_wkup_req_pin(pin))
 
     if CONF_EMULATION_MESSAGE in config:
         cg.add(var.set_tag_emulation_message(config[CONF_EMULATION_MESSAGE]))
