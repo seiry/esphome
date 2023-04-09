@@ -51,12 +51,9 @@ uint8_t PN7160::read_mifare_ultralight_bytes_(uint8_t start_page, uint16_t num_b
       ESP_LOGE(TAG, "Error reading tag data");
       return nfc::STATUS_FAILED;
     }
-    // if the subtraction rolls over the integer type, we'll append the full block of data we read;
-    //  otherwise, only append the necessary portion of the data we read
     uint16_t bytes_offset = (i + 1) * read_increment;
-    auto pages_in_end_itr = num_bytes - bytes_offset <= num_bytes
-                                ? rx.get_message().end() - 1
-                                : rx.get_message().end() - bytes_offset - num_bytes + 1;
+    auto pages_in_end_itr = bytes_offset <= num_bytes ? rx.get_message().end() - 1
+                                                      : rx.get_message().end() - (bytes_offset - num_bytes + 1);
     data.insert(data.end(), rx.get_message().begin() + nfc::NCI_PKT_HEADER_SIZE, pages_in_end_itr);
   }
 
