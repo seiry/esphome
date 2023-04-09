@@ -631,7 +631,7 @@ void PN7160::nci_fsm_transition_() {
 }
 
 void PN7160::nci_fsm_set_state_(NCIState new_state) {
-  ESP_LOGVV(TAG, "nci_fsm_set_state_(%u)", new_state);
+  ESP_LOGVV(TAG, "nci_fsm_set_state_(%u)", (uint8_t) new_state);
   this->nci_state_ = new_state;
   this->nci_state_error_ = NCIState::NONE;
   this->error_count_ = 0;
@@ -639,10 +639,10 @@ void PN7160::nci_fsm_set_state_(NCIState new_state) {
 }
 
 bool PN7160::nci_fsm_set_error_state_(NCIState new_state) {
-  ESP_LOGVV(TAG, "nci_fsm_set_error_state_(%u)", new_state);
+  ESP_LOGVV(TAG, "nci_fsm_set_error_state_(%u)", (uint8_t) new_state);
   this->nci_state_error_ = new_state;
   if (this->error_count_++ > NFCC_MAX_ERROR_COUNT) {
-    ESP_LOGE(TAG, "Too many errors transitioning to state %u; resetting NFCC", this->nci_state_error_);
+    ESP_LOGE(TAG, "Too many errors transitioning to state %u; resetting NFCC", (uint8_t) this->nci_state_error_);
     this->nci_fsm_set_state_(NCIState::NFCC_RESET);
   }
   return this->error_count_ > NFCC_MAX_ERROR_COUNT;
