@@ -9,21 +9,21 @@ namespace pn7160 {
 static const char *const TAG = "pn7160.mifare_ultralight";
 
 uint8_t PN7160::read_mifare_ultralight_tag_(nfc::NfcTag &tag) {
-  std::vector<uint8_t> page_3_to_6;
+  std::vector<uint8_t> data;
   // pages 3 to 6 contain various info we are interested in -- do one read to grab it all
   if (this->read_mifare_ultralight_bytes_(3, nfc::MIFARE_ULTRALIGHT_PAGE_SIZE * nfc::MIFARE_ULTRALIGHT_READ_SIZE,
-                                          page_3_to_6) != nfc::STATUS_OK) {
+                                          data) != nfc::STATUS_OK) {
     return nfc::STATUS_FAILED;
   }
 
-  if (!this->is_mifare_ultralight_formatted_(page_3_to_6)) {
+  if (!this->is_mifare_ultralight_formatted_(data)) {
     ESP_LOGW(TAG, "Not NDEF formatted");
     return nfc::STATUS_FAILED;
   }
 
   uint8_t message_length;
   uint8_t message_start_index;
-  if (this->find_mifare_ultralight_ndef_(page_3_to_6, message_length, message_start_index) != nfc::STATUS_OK) {
+  if (this->find_mifare_ultralight_ndef_(data, message_length, message_start_index) != nfc::STATUS_OK) {
     ESP_LOGW(TAG, "Couldn't find NDEF message");
     return nfc::STATUS_FAILED;
   }
@@ -32,15 +32,17 @@ uint8_t PN7160::read_mifare_ultralight_tag_(nfc::NfcTag &tag) {
   if (message_length == 0) {
     return nfc::STATUS_FAILED;
   }
-
-  std::vector<uint8_t> data;
-  if (read_mifare_ultralight_bytes_(nfc::MIFARE_ULTRALIGHT_DATA_START_PAGE, message_length + message_start_index,
-                                    data) != nfc::STATUS_OK) {
-    ESP_LOGE(TAG, "Error reading tag data");
-    return nfc::STATUS_FAILED;
+  // we already read pages 3-6 earlier -- pick up where we left off so we're not re-reading pages
+  const uint8_t read_length = message_length + message_start_index > 12 ? message_length + message_start_index - 12 : 0;
+  if (read_length) {
+    if (read_mifare_ultralight_bytes_(nfc::MIFARE_ULTRALIGHT_DATA_START_PAGE + 3, read_length, data) !=
+        nfc::STATUS_OK) {
+      ESP_LOGE(TAG, "Error reading tag data");
+      return nfc::STATUS_FAILED;
+    }
   }
-
-  data.erase(data.begin(), data.begin() + message_start_index);
+  // we need to trim off page 3 as well as any bytes ahead of message_start_index
+  data.erase(data.begin(), data.begin() + message_start_index + nfc::MIFARE_ULTRALIGHT_PAGE_SIZE);
 
   tag.set_ndef_message(make_unique<nfc::NdefMessage>(data));
 
