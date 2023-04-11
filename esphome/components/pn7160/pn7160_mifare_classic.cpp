@@ -54,7 +54,12 @@ uint8_t PN7160::read_mifare_classic_tag_(nfc::NfcTag &tag) {
       current_block++;
     }
   }
-  buffer.erase(buffer.begin(), buffer.begin() + message_start_index);
+
+  if (buffer.begin() + message_start_index < buffer.end()) {
+    buffer.erase(buffer.begin(), buffer.begin() + message_start_index);
+  } else {
+    return nfc::STATUS_FAILED;
+  }
 
   tag.set_ndef_message(make_unique<nfc::NdefMessage>(buffer));
 

@@ -63,7 +63,10 @@ uint8_t PN7160::read_mifare_ultralight_bytes_(uint8_t start_page, uint16_t num_b
     uint16_t bytes_offset = (i + 1) * read_increment;
     auto pages_in_end_itr = bytes_offset <= num_bytes ? rx.get_message().end() - 1
                                                       : rx.get_message().end() - (bytes_offset - num_bytes + 1);
-    data.insert(data.end(), rx.get_message().begin() + nfc::NCI_PKT_HEADER_SIZE, pages_in_end_itr);
+
+    if ((pages_in_end_itr > rx.get_message().begin()) && (pages_in_end_itr < rx.get_message().end())) {
+      data.insert(data.end(), rx.get_message().begin() + nfc::NCI_PKT_HEADER_SIZE, pages_in_end_itr);
+    }
   }
 
   ESP_LOGVV(TAG, "Data read: %s", nfc::format_bytes(data).c_str());
@@ -74,7 +77,8 @@ uint8_t PN7160::read_mifare_ultralight_bytes_(uint8_t start_page, uint16_t num_b
 bool PN7160::is_mifare_ultralight_formatted_(const std::vector<uint8_t> &page_3_to_6) {
   const uint8_t p4_offset = nfc::MIFARE_ULTRALIGHT_PAGE_SIZE;  // page 4 will begin 4 bytes into the vector
 
-  return !((page_3_to_6[p4_offset + 0] == 0xFF) && (page_3_to_6[p4_offset + 1] == 0xFF) &&
+  return (page_3_to_6.size() > p4_offset + 3) &&
+         !((page_3_to_6[p4_offset + 0] == 0xFF) && (page_3_to_6[p4_offset + 1] == 0xFF) &&
            (page_3_to_6[p4_offset + 2] == 0xFF) && (page_3_to_6[p4_offset + 3] == 0xFF));
 }
 
@@ -90,6 +94,10 @@ uint16_t PN7160::read_mifare_ultralight_capacity_() {
 uint8_t PN7160::find_mifare_ultralight_ndef_(const std::vector<uint8_t> &page_3_to_6, uint8_t &message_length,
                                              uint8_t &message_start_index) {
   const uint8_t p4_offset = nfc::MIFARE_ULTRALIGHT_PAGE_SIZE;  // page 4 will begin 4 bytes into the vector
+
+  if (!(page_3_to_6.size() > p4_offset + 5)) {
+    return nfc::STATUS_FAILED;
+  }
 
   if (page_3_to_6[p4_offset + 0] == 0x03) {
     message_length = page_3_to_6[p4_offset + 1];
