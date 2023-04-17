@@ -8,8 +8,6 @@ from esphome.const import (
 import esphome.config_validation as cv
 
 _ESP32C3_SPI_PSRAM_PINS = {
-    12: "SPIHD",
-    13: "SPIWP",
     14: "SPICS0",
     15: "SPICLK",
     16: "SPID",
