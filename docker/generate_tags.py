@@ -59,7 +59,6 @@ def main():
         full_tags = []
 
         for tag in tags_to_push:
-            full_tags += [f"ghcr.io/esphome/esphome{suffix}:{tag}"]
             full_tags += [f"esphome/esphome{suffix}:{tag}"]
         print(f"tags={','.join(full_tags)}", file=f)
 
