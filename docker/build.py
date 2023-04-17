@@ -138,10 +138,8 @@ def main():
             CHANNEL_BETA: "cache-beta",
             CHANNEL_RELEASE: "cache-latest",
         }[channel]
-        cache_img = f"ghcr.io/{params.build_to}:{cache_tag}"
 
         imgs = [f"{params.build_to}:{tag}" for tag in tags_to_push]
-        imgs += [f"ghcr.io/{params.build_to}:{tag}" for tag in tags_to_push]
 
         # 3. build
         cmd = [
@@ -152,8 +150,6 @@ def main():
             f"BASEIMGTYPE={params.baseimgtype}",
             "--build-arg",
             f"BUILD_VERSION={args.tag}",
-            "--cache-from",
-            f"type=registry,ref={cache_img}",
             "--file",
             "docker/Dockerfile",
             "--platform",
@@ -164,7 +160,6 @@ def main():
         for img in imgs:
             cmd += ["--tag", img]
         if args.push:
-            cmd += ["--push", "--cache-to", f"type=registry,ref={cache_img},mode=max"]
         if args.load:
             cmd += ["--load"]
 
@@ -173,7 +168,6 @@ def main():
         manifest = DockerParams.for_type_arch(args.build_type, ARCH_AMD64).manifest_to
 
         targets = [f"{manifest}:{tag}" for tag in tags_to_push]
-        targets += [f"ghcr.io/{manifest}:{tag}" for tag in tags_to_push]
         # 1. Create manifests
         for target in targets:
             cmd = ["docker", "manifest", "create", target]
