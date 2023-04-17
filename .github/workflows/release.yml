@@ -85,7 +85,7 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile
-          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          platforms: linux/amd64
           target: ${{ matrix.image.target }}
           push: true
           # yamllint disable rule:line-length
