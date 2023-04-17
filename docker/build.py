@@ -64,9 +64,9 @@ class DockerParams:
     @classmethod
     def for_type_arch(cls, build_type, arch):
         prefix = {
-            TYPE_DOCKER: "esphome/esphome",
-            TYPE_HA_ADDON: "esphome/esphome-hassio",
-            TYPE_LINT: "esphome/esphome-lint",
+            TYPE_DOCKER: "seiry/esphome",
+            TYPE_HA_ADDON: "seiry/esphome-hassio",
+            TYPE_LINT: "seiry/esphome-lint",
         }[build_type]
         build_to = f"{prefix}-{arch}"
         baseimgtype = {
